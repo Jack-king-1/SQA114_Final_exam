@@ -27,7 +27,7 @@ resource "aws_instance" "jenkins" {
   subnet_id     = aws_subnet.main_b.id
   security_groups = [aws_security_group.web_sg.id]
   key_name      = var.key_name
-  user_data     = file("scripts/jenkins_install.sh")
+  user_data     = file("scripts/jenkins_install.sh/")
   tags = {
     Name = "jenkinsController"
   }
