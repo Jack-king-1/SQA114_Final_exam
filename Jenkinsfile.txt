@@ -1,27 +1,67 @@
 pipeline{
     agent { label 'aws' }
     environment{
-        TOKENAWS = credentials('aws-cr')
+        TOKENAWS = credentials('ec2-user')
+        TEST_RESULT_FILE = 'test_result.txt'
     }
     stages{ 
         stage('Deploy to Testing'){
             steps{
-            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@54.160.29.83 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/Jack-king-1/SQA114_Final_exam/tree/main/test /var/www/html"'
+            echo 'Testing...'
+            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@54.160.29.83 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/ChaoYiChenTW/SQA114FinalExam.git /var/www/html"'
+            script {
+                try {
+                    sh 'npm install selenium-webdriver'
+
+                    def output = sh(script: 'node tests/test.js', returnStdout: true).trim()
+                    echo "Test Output: ${output}"
+
+                    if(output.contains('Test Success')){
+                        writeFile file: env.TEST_RESULT_FILE, text: 'true'
+                    } else {
+                        writeFile file: env.TEST_RESULT_FILE, text: 'false'
+                    }
+                } catch (Exception e) {
+                    echo "Test failed: ${e.message}"
+                    writeFile file: env.TEST_RESULT_FILE, text: 'false'
+                }
+            }
             }
         }
         stage('Deploy to Staging'){
+            when {
+               expression {
+                def testResult = readFile(env.TEST_RESULT_FILE).trim()
+                return testResult == 'true'
+                }           
+            }
             steps{
-            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@3.239.223.239 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/Jack-king-1/SQA114_Final_exam/tree/main/test /var/www/html"'
+            echo 'Staging...'
+            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@3.239.223.239 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/ChaoYiChenTW/SQA114FinalExam.git /var/www/html"'
             }
         }
         stage('Deploy to Production_Env1'){
+            when {
+               expression {
+                def testResult = readFile(env.TEST_RESULT_FILE).trim()
+                return testResult == 'true'
+                }           
+            }
             steps{
-            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@52.202.243.240 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/Jack-king-1/SQA114_Final_exam/tree/main/test /var/www/html"'
+            echo 'Production Env1...'
+            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@52.202.243.240 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/ChaoYiChenTW/SQA114FinalExam.git /var/www/html"'
             }
         }
         stage('Deploy to Production_Env2'){
+            when {
+               expression {
+                def testResult = readFile(env.TEST_RESULT_FILE).trim()
+                return testResult == 'true'
+                }           
+            }
             steps{
-            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@44.220.93.150 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/Jack-king-1/SQA114_Final_exam/tree/main/test /var/www/html"'
+            echo 'Production Env2...'
+            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@44.220.93.150 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/ChaoYiChenTW/SQA114FinalExam.git /var/www/html"'
             }
         }
     }
