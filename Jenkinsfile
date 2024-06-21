@@ -21,7 +21,7 @@ pipeline{
         }
         stage('Deploy to Production_Env2'){
             steps{
-            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@44.220.93.150 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/eduval/TrainingExercise /var/www/html"'
+            sh 'ssh -T -oStrictHostKeyChecking=no -i "$TOKENAWS" ec2-user@44.220.93.150 " sudo dnf update; sudo dnf install git -y; sudo dnf install -y httpd; sudo systemctl start httpd; sudo rm -Rf /var/www/html/; sudo git clone https://github.com/Jack-king-1/SQA114_Final_exam/tree/main/test /var/www/html"'
             }
         }
     }
